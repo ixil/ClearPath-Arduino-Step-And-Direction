@@ -57,6 +57,7 @@ class ClearPathMotorSD
   void attach(int, int);
   void attach(int, int, int);
   void attach(int, int, int, int);
+  boolean moveWithVelocity(long);
   boolean move(long);
   boolean moveFast(long);
   void enable();

@@ -1,6 +1,6 @@
 /*
   ClearPathMotorSD.h - Library for interfacing with Clearpath-SD motors using an Arduino- Version 1
-  Teknic 2017 Brendan Flosenzier 
+  Teknic 2017 Brendan Flosenzier
 
   This library is free software; you can redistribute it and/or
   modify it.
@@ -10,22 +10,22 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-/* 
-  
+/*
+
   A ClearPathMotorSD is activated by creating an instance of the ClearPathMotorSD class.
 
   There can several instances of ClearPathMotorSD however each must be attached to different pins.
 
   This class is used in conjuntion with the ClearPathStepGen class which manages and sends step pulses to each motor.
-  
-  Note: Each attached motor must have its direction/B pin connected to one of pins 8-13 on an arduino UNO (PORTB) 
+
+  Note: Each attached motor must have its direction/B pin connected to one of pins 8-13 on an arduino UNO (PORTB)
   in order to work with the ClearPathStepGen object.  Other devices can be connected to pins 8-13 as well.
   If you are using another Arduino besides the UNO, the ClearPathStepGen must be modifyed to use a different port.
 
   The functions for a ClearPathMotorSD are:
 
    ClearPathMotorSD - default constructor for initializing the motor
-   
+
    attach() - Attachs pins to this motor, and declares them as input/outputs
 
    stopMove()  - Interupts the current move, the motor may abruptly stop
@@ -45,19 +45,19 @@
    setMaxAccel() - sets the acceleration
 
    commandDone() - returns wheter or not there is a valid current command
-   
+
  */
 #include "Arduino.h"
 #include "ClearPathMotorSD.h"
 
 
-/*		
+/*
 	This is an internal Function used by ClearPathStepGen to calculate how many pulses to send to each motor.
 	It tracks the current command, as well as how many steps have been sent, and calculates how many steps
 	to send in the next ISR.
 */
 int ClearPathMotorSD::calcSteps()
-{  
+{
 	_TX++;//increment time
 	if(!Enabled)
 		return 0;
@@ -104,7 +104,7 @@ int ClearPathMotorSD::calcSteps()
 			break;
 
 		case 1:		//Phase 1 first half of move
-			
+
 			// Execute move
 			MovePosnQx = MovePosnQx + VelRefQx + (AccelRefQx>>1);
 			VelRefQx = VelRefQx + AccelRefQx;
@@ -127,7 +127,7 @@ int ClearPathMotorSD::calcSteps()
 					moveStateX = 2;			//Start Phase 2
 				}
 				_flag=true;
-				
+
 			}
 			else {
 				// Otherwise, check velocity.
@@ -178,6 +178,37 @@ int ClearPathMotorSD::calcSteps()
 			}
 
 			break;
+		case 5:		//Continous move
+			// Execute move
+			TargetPosnQx = CommandX<<fractionalBits;
+			MovePosnQx = TargetPosnQx;
+
+			// Execute move
+			//accelerate up to desired velocity
+			MovePosnQx = MovePosnQx + VelRefQx + (AccelRefQx>>1);
+			VelRefQx = VelRefQx + AccelRefQx;
+
+			if(labs(VelRefQx) >= VelLimitQx) {
+			  // If maximum velocity reached, compute TX1 and set AX = 0, and VelRefQx=VelLimitQx.
+			    if(_TX1 == 0) {
+			      AccelRefQx = 0;
+			      _TX1 = _TX;
+			      if(VelRefQx > 0)
+				VelRefQx=VelLimitQx;
+			      else
+				VelRefQx=-VelLimitQx;
+			    }
+			  }
+			// if(TargetPosnQx-MovePosnQx>50<<fractionalBits){
+			//   MovePosnQx=MovePosnQx+50<<fractionalBits;
+			// }
+			// else{
+			//   MovePosnQx = TargetPosnQx;
+			//   CommandX=0;
+			//   moveStateX = 3;
+			// }
+
+			break;
 	}
 	// Compute burst value
 	_BurstX = (MovePosnQx - StepsSent)>>fractionalBits;
@@ -194,7 +225,7 @@ int ClearPathMotorSD::calcSteps()
 }
 
 
-/*		
+/*
 	This is the default constructor.  This intializes the variables.
 */
 ClearPathMotorSD::ClearPathMotorSD()
@@ -205,28 +236,28 @@ ClearPathMotorSD::ClearPathMotorSD()
 	PinE=0;
 	PinH=0;
 	Enabled=false;
-	VelLimitQx=0;					
+	VelLimitQx=0;
 	AccLimitQx=0;
-	MovePosnQx=0;				
-	StepsSent=0;				
-	VelRefQx=0;				
-	AccelRefQx=0;					
-	_TX=0;					
-	_TX1=0;				
-	_TX2=0;				
-	_TX3=0;			
-	_TAUX=0;					
+	MovePosnQx=0;
+	StepsSent=0;
+	VelRefQx=0;
+	AccelRefQx=0;
+	_TX=0;
+	_TX1=0;
+	_TX2=0;
+	_TX3=0;
+	_TAUX=0;
 	_flag=0;
-	AccelRefQxS=0;					
-	TargetPosnQx=0;				
-	TriangleMovePeakQx=0;					
+	AccelRefQxS=0;
+	TargetPosnQx=0;
+	TriangleMovePeakQx=0;
 	CommandX=0;
 	fractionalBits=10;
 	_BurstX=0;
 	AbsPosition=0;
 }
 
-/*		
+/*
 	This is the one pin attach function.  It asociates the passed number, as this motors Step Pin
 */
 void ClearPathMotorSD::attach(int BPin)
@@ -238,8 +269,8 @@ void ClearPathMotorSD::attach(int BPin)
   pinMode(PinB,OUTPUT);
 }
 
-/*		
-	This is the two pin attach function.  
+/*
+	This is the two pin attach function.
 	It asociates the 1st number, as this motors Direction Pin
 	and the 2nd number with the Step Pin
 */
@@ -253,8 +284,8 @@ void ClearPathMotorSD::attach(int APin, int BPin)
   pinMode(PinB,OUTPUT);
 }
 
-/*		
-	This is the three pin attach function.  
+/*
+	This is the three pin attach function.
 	It asociates the 1st number, as this motors Direction Pin,
 	the 2nd number with the Step Pin,
 	and the 3rd number with the Enable Pin
@@ -270,8 +301,8 @@ void ClearPathMotorSD::attach(int APin, int BPin, int EPin)
   pinMode(PinE,OUTPUT);
 }
 
-/*		
-	This is the four pin attach function.  
+/*
+	This is the four pin attach function.
 	It asociates the 1st number, as this motors Direction Pin,
 	the 2nd number with the Step Pin,
 	the 3rd number with the Enable Pin,
@@ -289,7 +320,7 @@ void ClearPathMotorSD::attach(int APin, int BPin, int EPin, int HPin)
   pinMode(PinH,INPUT_PULLUP);
 }
 
-/*		
+/*
 	This function clears the current move, and puts the motor in a
 	move idle state, without disabling it, or clearing the position.
 
@@ -311,7 +342,100 @@ void ClearPathMotorSD::stopMove()
 	sei();
 }
 
-/*		
+/*
+	This function commands a directional move
+	The move cannot be longer than 2,000,000 counts
+	If there is a current move, it will NOT be overwritten
+
+	The function will return true if the move was accepted
+*/
+boolean ClearPathMotorSD::moveWithvelocity(long vel)
+{
+  int n = abs(vel)/2000;
+  if(n<51)
+    VelLimitQx=(abs(vel)*(1<<fractionalBits))/2000;
+  else
+    VelLimitQx=50*(1<<fractionalBits);
+  if(CommandX==0)
+  {
+	//Set direction
+	if(vel<0)
+	{
+		  if(PinA!=0)
+		  {
+			  digitalWrite(PinA,HIGH);
+			  _direction=true;
+		  }
+	}
+	else
+	{
+	        if(PinA!=0)
+	        {
+	      	  digitalWrite(PinA,LOW);
+	      	  _direction=false;
+	        }
+	}
+	moveStateX = 4;
+	CommandX=2000000; 
+	return true;
+  }
+  else
+	  return false;
+
+}
+
+/*
+	This function commands a directional move which will burst out steps as fast as possible with no acceleration or velocity limits
+*/
+boolean ClearPathMotorSD::moveFast(long dist)
+{
+  if(CommandX==0)
+  {
+	  if(dist<0)
+	  {
+		  if(PinA!=0)
+		  {
+			  digitalWrite(PinA,HIGH);
+			  _direction=true;
+		  }
+		  cli();
+		  moveStateX = 4;
+		  CommandX=-dist;
+		  sei();
+
+	  }
+	  else
+	  {
+		  if(PinA!=0)
+		  {
+			  digitalWrite(PinA,LOW);
+			  _direction=false;
+		  }
+			cli();
+			moveStateX = 4;
+			CommandX=dist;
+			sei();
+	  }
+	  return true;
+  }
+  else
+	  return false;
+
+}
+/*
+	This function sets the velocity in Counts/sec assuming the ISR frequency is 2kHz.
+	The maximum value for velMax is 100,000, the minimum is 2
+*/
+void ClearPathMotorSD::setMaxVel(long velMax)
+{
+	int n = velMax/2000;
+	if(n<51)
+		VelLimitQx=(velMax*(1<<fractionalBits))/2000;
+	else
+		VelLimitQx=50*(1<<fractionalBits);
+
+}
+/*
 	This function commands a directional move
 	The move cannot be longer than 2,000,000 counts
 	If there is a current move, it will NOT be overwritten
@@ -347,7 +471,7 @@ boolean ClearPathMotorSD::move(long dist)
 
 }
 
-/*		
+/*
 	This function commands a directional move which will burst out steps as fast as possible with no acceleration or velocity limits
 */
 boolean ClearPathMotorSD::moveFast(long dist)
@@ -365,7 +489,7 @@ boolean ClearPathMotorSD::moveFast(long dist)
 		  moveStateX = 4;
 		  CommandX=-dist;
 		  sei();
-		  
+
 	  }
 	  else
 	  {
@@ -385,7 +509,7 @@ boolean ClearPathMotorSD::moveFast(long dist)
 	  return false;
 
 }
-/*		
+/*
 	This function sets the velocity in Counts/sec assuming the ISR frequency is 2kHz.
 	The maximum value for velMax is 100,000, the minimum is 2
 */
@@ -398,7 +522,7 @@ void ClearPathMotorSD::setMaxVel(long velMax)
 		VelLimitQx=50*(1<<fractionalBits);
 
 }
-/*		
+/*
 	This function sets the acceleration in Counts/sec/sec assuming the ISR frequency is 2kHz.
 	The maximum value for accelMax is 2,000,000, the minimum is 4,000
 */
@@ -408,7 +532,7 @@ void ClearPathMotorSD::setMaxAccel(long accelMax)
 }
 
 
-/*		
+/*
 	This function returns the absolute commanded position
 */
 long ClearPathMotorSD::getCommandedPosition()
@@ -416,7 +540,7 @@ long ClearPathMotorSD::getCommandedPosition()
 	return AbsPosition;
 }
 
-/*		
+/*
 	This function returns true if there is no current command
 	It returns false if there is a current command
 */
@@ -429,7 +553,7 @@ boolean ClearPathMotorSD::commandDone()
 }
 
 
-/*		
+/*
 	This function returns the value of the HLFB Pin
 */
 boolean ClearPathMotorSD::readHLFB()
@@ -440,7 +564,7 @@ boolean ClearPathMotorSD::readHLFB()
 		return false;
 }
 
-/*		
+/*
 	This function enables the motor
 */
 void ClearPathMotorSD::enable()
@@ -452,7 +576,7 @@ void ClearPathMotorSD::enable()
 	Enabled=true;
 }
 
-/*		
+/*
 	This function returns zeros out the current command, and digitally writes the enable pin LOW
 	If the motor was not attached with an enable pin, then it just zeros the command
 */
