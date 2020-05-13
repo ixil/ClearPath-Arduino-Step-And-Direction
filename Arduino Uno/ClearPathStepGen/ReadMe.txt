@@ -15,6 +15,8 @@ The ClearPathMotorSD class is used to manage an individual motor including setti
    
 --- move() - sets the maximum veloctiy
 
+--- moveWithVelocity() - moves continuously at a velocity
+
    
 --- disable() - disables the motor
 

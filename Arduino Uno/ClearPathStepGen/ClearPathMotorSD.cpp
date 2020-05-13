@@ -178,7 +178,7 @@ int ClearPathMotorSD::calcSteps()
 			}
 
 			break;
-		case 5:		//Continous move
+		case 5:		//Continuous / Velocity move
 			// Execute move
 			TargetPosnQx = CommandX<<fractionalBits;
 			MovePosnQx = TargetPosnQx;
@@ -193,6 +193,7 @@ int ClearPathMotorSD::calcSteps()
 			    if(_TX1 == 0) {
 			      AccelRefQx = 0;
 			      _TX1 = _TX;
+			      //Set velocity
 			      if(VelRefQx > 0)
 				VelRefQx=VelLimitQx;
 			      else

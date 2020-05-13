@@ -1,6 +1,8 @@
 /*
+ *
   ClearPathStepGen.h - Interrupt driven library for Sending High frequency Step signals to Clearpath motors using an Arduino- Version 1
   Teknic 2017 Brendan Flosenzier
+  Oliver Harley 2020
 
   This library is free software; you can redistribute it and/or
   modify it.
