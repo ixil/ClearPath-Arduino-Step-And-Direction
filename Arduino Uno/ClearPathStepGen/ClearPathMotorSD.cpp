@@ -2,8 +2,8 @@
   ClearPathMotorSD.h - Library for interfacing with Clearpath-SD motors using an Arduino- Version 1
   Teknic 2017 Brendan Flosenzier
 
-  This library is free software; you can redistribute it and/or
-  modify it.
+  Copyright (c) 2017 Teknic Inc. This work is free to use, copy and distribute under the terms of the standard
+  MIT permissive software license which can be found at https://opensource.org/licenses/MIT
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -397,6 +397,7 @@ boolean ClearPathMotorSD::moveFast(long dist)
 		  if(PinA!=0)
 		  {
 			  digitalWrite(PinA,HIGH);
+			  delay(1);
 			  _direction=true;
 		  }
 		  cli();
@@ -410,6 +411,7 @@ boolean ClearPathMotorSD::moveFast(long dist)
 		  if(PinA!=0)
 		  {
 			  digitalWrite(PinA,LOW);
+			  delay(1);
 			  _direction=false;
 		  }
 			cli();
@@ -533,18 +535,9 @@ void ClearPathMotorSD::enable()
 */
 void ClearPathMotorSD::disable()
 {
-
+	stopMove();
 	if(PinE!=0)
 		digitalWrite(PinE,LOW);
-	MovePosnQx=0;
 	Enabled=false;
-	VelRefQx=0;
-	StepsSent=0;
-	_TX=0;
-	_TX1=0;
-	_TX2=0;
-	_TX3=0;
-	_BurstX=0;
-	moveStateX = 3;
-	CommandX=0;
+	
 }

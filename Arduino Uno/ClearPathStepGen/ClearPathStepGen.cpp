@@ -4,8 +4,8 @@
   Teknic 2017 Brendan Flosenzier
   Oliver Harley 2020
 
-  This library is free software; you can redistribute it and/or
-  modify it.
+  Copyright (c) 2017 Teknic Inc. This work is free to use, copy and distribute under the terms of the standard
+  MIT permissive software license which can be found at https://opensource.org/licenses/MIT
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
